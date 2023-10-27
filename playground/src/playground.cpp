@@ -11,7 +11,7 @@ int main()
 	sort.push_back(20);
 	sort.push_back(15);
 
-	sort.quick_sort(0, sort.size() - 1);
+	sort.merge_sort(0, sort.size() - 1);
 
 	for (auto value : sort) 
 	{

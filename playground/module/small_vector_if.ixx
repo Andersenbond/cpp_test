@@ -5,7 +5,7 @@ export template <typename T, int N> class SmallVector;
 #include <ranges>
 #include <iterator>
 #include <iostream>
-
+#include <vector>
 
 template <typename T, int N>
 class SmallVector
@@ -64,7 +64,7 @@ public:
 	 * the function throw a std::out_of_range exception. */
 	T& operator[](size_t index)
 	{
-		if (index >= m_size)
+		if (index >= N)
 		{
 			throw std::out_of_range("Index out of range");
 		}
@@ -116,27 +116,96 @@ public:
 	}
 
  
-
-		/*** @Brief: Sort the Array using the quick sort algorithm.
-		* @param:none.
-		* @return: none. */
-		void quick_sort(int left, int right) noexcept
+	/*** @Brief: Sort the Array using the quick sort algorithm.
+	* @param:none.
+	* @return: none. */
+	void quick_sort(int left, int right) noexcept
+	{
+		if (left >= right)
 		{
-			if (left >= right)
-			{
-				return;
-			}
-
-			// Get the pivot position. 
-			auto pivot_index = partition(left, right);
-
-			// Call the function for the left and right side of the pivot position.
-			quick_sort(left, pivot_index - 1);
-			quick_sort(pivot_index + 1, right);
+			return;
 		}
+
+		// Get the pivot position. 
+		auto pivot_index = partition(left, right);
+
+		// Call the function for the left and right side of the pivot position.
+		quick_sort(left, pivot_index - 1);
+		quick_sort(pivot_index + 1, right);
+	}
 	 
 
-	
+	void merge_sort(int left, int right) noexcept 
+	{
+		if (left < right) 
+		{
+			int middle = (left + right) / 2;
+			merge_sort(left, middle);
+			merge_sort(middle + 1, right);
+			merge(left, right);
+		}
+	}
+
+
+	void merge(int left, int right) 
+	{
+		auto dataAsT = asTArray();
+		// Split the array in two
+		// Calculate the lenght of the two arrays
+		//int len2 = right - len1 + 1;
+		
+		int len1 = (right - left + 1) / 2; // Size of left subarray
+		int len2 = right - left + 1 - len1; // Size of right subarray
+		int mid = left + len1; // Midpoint index
+
+		SmallVector <T, N / 2 + 1> leftSubArray;
+		SmallVector <T, N / 2 + 1> rightSubArray;
+		// Copy the data to the subArrays;
+		//std::copy(m_begin + left, m_begin + left + len1, leftSubArray.begin());
+		//std::copy(m_begin + left + len1, m_begin + right + 1, rightSubArray.begin());
+		/**/
+
+		// Create arrays for left and right subarrays
+		//T leftSubArray[len1];
+		//T rightSubArray[len2];
+		//std::vector<T> leftSubArray(len1);
+		//std::vector<T> rightSubArray(len2); 
+		// Copy data from the main array to the subarrays
+		for (int i = 0; i < len1; ++i)
+		{
+			leftSubArray.push_back(dataAsT[left + i]);
+		}
+
+		for (int i = 0; i < len2; ++i) 
+		{
+			rightSubArray.push_back(dataAsT[mid +1*0 + i]);
+		}
+		
+		// Sort the sub Arrays 
+		int l = 0, r = 0, i = left;
+
+		while (l < len1 && r < len2)
+		{
+			if (leftSubArray[l] < rightSubArray[r]) 
+			{
+				dataAsT[i++] = leftSubArray[l++];
+			}
+			else 
+			{
+				dataAsT[i++] = rightSubArray[r++];
+			}
+		}
+		// copy the rest of the data, one one array will still have data to be 
+		// copied when the other reaches the end. 
+		while (l < len1) 
+		{
+			dataAsT[i++] = leftSubArray[l++];
+		}
+		while (r < len1)
+		{
+			dataAsT[i++] = rightSubArray[r++];
+		}
+	}
 
 private:
 	/*** @Brief:Quick sort partition function. This function is used internally 
