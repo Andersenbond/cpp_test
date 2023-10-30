@@ -7,6 +7,7 @@ export template <typename T, int N> class SmallVector;
 #include <iostream>
 #include <vector>
 
+
 template <typename T, int N>
 class SmallVector
 {
@@ -21,8 +22,22 @@ public:
 	/*** @Brief: Class constructor */
 	SmallVector() : m_size{ 0 }
 	{
-		m_begin = static_cast<T*>(static_cast<void*>(m_data));
-		m_end = static_cast<T*>(static_cast<void*>(m_data));
+		//m_begin = static_cast<T*>(static_cast<void*>(m_data));
+		//m_end = static_cast<T*>(static_cast<void*>(m_data));
+		m_begin = m_data;
+		m_end = m_data;
+	}
+
+	/*** @Brief: Class constructor 
+	* @param initial size. This allow us to overwrite the values 
+	* using the [] operator.
+	* */
+  	SmallVector(size_t size) : m_size{ size }
+	{
+		//m_begin = static_cast<T*>(static_cast<void*>(m_data));
+		//m_end = static_cast<T*>(static_cast<void*>(m_data));
+		m_begin = m_data;
+		m_end = m_begin + m_size;
 	}
 
 	/*** @Brief: Copy constructor 
@@ -30,8 +45,10 @@ public:
 	 * @return: none */
 	SmallVector(const SmallVector& other)
 	{
-		m_begin = static_cast<T*>(static_cast<void*>(m_data));
-		m_end = static_cast<T*>(static_cast<void*>(m_data));
+		//m_begin = static_cast<T*>(static_cast<void*>(m_data));
+		//m_end = static_cast<T*>(static_cast<void*>(m_data));
+		m_begin = m_data;
+		m_end = m_begin + m_size;
 
 		std::ranges::copy(other, std::back_inserter(*this));
 		m_size = other.size();
@@ -64,11 +81,12 @@ public:
 	 * the function throw a std::out_of_range exception. */
 	T& operator[](size_t index)
 	{
-		if (index >= N)
+		if (index >= m_size)
 		{
 			throw std::out_of_range("Index out of range");
 		}
-		return *static_cast<T*>(static_cast<void*>(&m_data[index * sizeof T]));
+		return m_data[index];
+		//return *static_cast<T*>(static_cast<void*>(&m_data[index * sizeof T]));
 	}
 
 	/*** @Brief: Returns the number of elements in the array.
@@ -84,7 +102,7 @@ public:
 	{
 		if (m_size < N)
 		{
-			*m_end = val;
+			m_data[m_size] = val;
 			m_end++;
 			m_size++;
 		}
@@ -135,8 +153,10 @@ public:
 	}
 	 
 
-	void merge_sort(int left, int right) noexcept 
+	void merge_sort(int left = 0, int right = -1) noexcept 
 	{
+		right = right == -1 ? m_size - 1 : right;
+
 		if (left < right) 
 		{
 			int middle = (left + right) / 2;
@@ -147,65 +167,135 @@ public:
 	}
 
 
-	void merge(int left, int right) 
+	void heap_sort() noexcept
+	{	
+		SmallVector<T, N> arr;
+		// first convert our array to a binary tree where the node value is 
+		// always higher than its childs
+		for (int i = 0; i < N; i++)
+		{
+			heap_insert(arr, m_data[i]);
+		}
+
+		// Sort the max heap
+		int unsorted_elements = arr.size() - 1;
+		while (unsorted_elements > 0) 
+		{
+			heapify_max_representation(arr, unsorted_elements);
+		}
+
+
+
+		// now we sort our array by sending the root (highest element) to the
+		//  end and heapifying the array afterwards
+		// heapify_max_representation(arr, arr.size() - 1);
+
+		// Copy the sorted elements back to the original array
+		for(int i = 0; i < arr.size(); i++)
+		{
+			m_data[i] = arr[i];
+		}	
+	}
+
+
+	void heap_insert(SmallVector<T, N>& arr, T value) 
 	{
-		auto dataAsT = asTArray();
-		// Split the array in two
-		// Calculate the lenght of the two arrays
-		//int len2 = right - len1 + 1;
-		
-		int len1 = (right - left + 1) / 2; // Size of left subarray
-		int len2 = right - left + 1 - len1; // Size of right subarray
-		int mid = left + len1; // Midpoint index
+		// Get the parent of the node to be inserted
 
-		SmallVector <T, N / 2 + 1> leftSubArray;
-		SmallVector <T, N / 2 + 1> rightSubArray;
-		// Copy the data to the subArrays;
-		//std::copy(m_begin + left, m_begin + left + len1, leftSubArray.begin());
-		//std::copy(m_begin + left + len1, m_begin + right + 1, rightSubArray.begin());
-		/**/
+		int value_index = arr.size();
+		int parent_index = (value_index - 1) / 2;
+		// insert the node
+		arr.push_back(value);
 
-		// Create arrays for left and right subarrays
-		//T leftSubArray[len1];
-		//T rightSubArray[len2];
-		//std::vector<T> leftSubArray(len1);
-		//std::vector<T> rightSubArray(len2); 
-		// Copy data from the main array to the subarrays
-		for (int i = 0; i < len1; ++i)
+		// make sure none of the parents are 
+		// bigger than the inserted node
+		while (value_index > 0 && arr[value_index] > arr[parent_index]) 
 		{
-			leftSubArray.push_back(dataAsT[left + i]);
+			std::swap(arr[value_index], arr[parent_index]);
+			value_index = parent_index;
+			parent_index = (value_index - 1) / 2;
 		}
+	}
 
-		for (int i = 0; i < len2; ++i) 
+	void heapify_max_representation(SmallVector<T, N>& arr, int& unsorted_elements)
+	{
+		if (unsorted_elements > 0) 
 		{
-			rightSubArray.push_back(dataAsT[mid +1*0 + i]);
-		}
-		
-		// Sort the sub Arrays 
-		int l = 0, r = 0, i = left;
+			// First we swap the root with the last element in the array 
+			std::swap(arr[0], arr[unsorted_elements]);
 
-		while (l < len1 && r < len2)
-		{
-			if (leftSubArray[l] < rightSubArray[r]) 
+			// since the the root is the highest element in the array this swap sorts it
+			// with that we need to decrement the unsorted_elements by 1.
+			unsorted_elements--;
+
+			// now we need to update the array in case our previous swap changes the 
+			// array to be in the max representation
+			int node_index = 0, child_l_index = 1, child_r_index = 2;
+
+			while (node_index < unsorted_elements) 
 			{
-				dataAsT[i++] = leftSubArray[l++];
+				int largest = node_index;
+				if (child_l_index <= unsorted_elements && arr[child_l_index] > arr[largest]) 
+				{
+					largest = child_l_index;
+				}
+				if (child_r_index <= unsorted_elements && arr[child_r_index] > arr[largest]) {
+					largest = child_r_index;
+				}
+
+				if (largest != node_index) 
+				{
+					std::swap(arr[node_index], arr[largest]);
+					node_index = largest;
+					child_l_index = 2 * node_index + 1;
+					child_r_index = 2 * node_index + 2;
+				}
+				else 
+				{
+					// if no swap needed the array is already in the max representation.
+					break;
+				}
+			}
+			
+			// Call the fuction for the next element until the array is sorted
+			//heapify_max_representation(arr, unsorted_elements);
+		}
+		else 
+		{
+			return;
+		}
+	}
+
+	void heap_insert2(SmallVector<T, N>& arr, T value)
+	{
+		int len = arr.size();
+
+		if (len == 0)
+		{
+			arr.push_back(value);
+			return;
+		}
+		// go down the tree and insert the element so that 
+		// each node is greater than or equal to the values 
+		// of its children.
+		int node_index = 0; 
+
+		while (node_index < len) 
+		{
+			if (arr[node_index] > value) 
+			{
+				node_index++;
 			}
 			else 
 			{
-				dataAsT[i++] = rightSubArray[r++];
+				std::swap(arr[node_index], value);
+				heap_insert(arr, value);
+				return;
 			}
 		}
-		// copy the rest of the data, one one array will still have data to be 
-		// copied when the other reaches the end. 
-		while (l < len1) 
-		{
-			dataAsT[i++] = leftSubArray[l++];
-		}
-		while (r < len1)
-		{
-			dataAsT[i++] = rightSubArray[r++];
-		}
+		arr.push_back(value);
 	}
+
 
 private:
 	/*** @Brief:Quick sort partition function. This function is used internally 
@@ -228,9 +318,66 @@ private:
 				std::swap(dataAsT[i], dataAsT[j]);
 			}
 		}
-
 		std::swap(dataAsT[i + 1], dataAsT[right]);
 		return i + 1;
+	}
+
+	/*** @Brief:Merge sort merge function. This function is used internally
+	* to sort the vector using merge sort.
+	* @param:left index.
+	* @param:right index.
+	* @return:returns the pivot index, the pivot value is taken as data[right],
+	* the return value is the final position after the sort.
+	* */
+	void merge(int left, int right)
+	{
+		auto dataAsT = asTArray();
+		// Split the array in two
+		// Calculate the lenght of the two arrays
+		//int len2 = right - len1 + 1;
+
+		int len1 = (right - left + 1) / 2; // Size of left subarray
+		int len2 = right - left + 1 - len1; // Size of right subarray
+		int mid = left + len1; // Midpoint index
+
+		SmallVector <T, N / 2 + 1> leftSubArray(len1);
+		SmallVector <T, N / 2 + 1> rightSubArray(len2);
+
+		// Copy the data to the subArrays;
+		for (int i = 0; i < len1; ++i)
+		{
+			leftSubArray[i] = dataAsT[left + i];
+		}
+
+		for (int i = 0; i < len2; ++i)
+		{
+			rightSubArray[i] = dataAsT[mid + 1 * 0 + i];
+		}
+
+		// Sort the sub Arrays 
+		int l = 0, r = 0, i = left;
+
+		while (l < len1 && r < len2)
+		{
+			if (leftSubArray[l] < rightSubArray[r])
+			{
+				dataAsT[i++] = leftSubArray[l++];
+			}
+			else
+			{
+				dataAsT[i++] = rightSubArray[r++];
+			}
+		}
+		// copy the rest of the data, one one array will still have data to be 
+		// copied when the other reaches the end. 
+		while (l < len1)
+		{
+			dataAsT[i++] = leftSubArray[l++];
+		}
+		while (r < len1)
+		{
+			dataAsT[i++] = rightSubArray[r++];
+		}
 	}
 
 	// Helper function to interpret m_data as an array of T
@@ -247,7 +394,8 @@ private:
 	T* m_end{ nullptr };
 	T* m_begin{ nullptr };
 	size_t m_size{ 0 };
-	char m_data[N * sizeof T]{ };
+	//char m_data[N * sizeof T]{ };
+	T m_data[N]{ };
 };
 
  
