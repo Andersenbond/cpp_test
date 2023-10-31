@@ -1,24 +1,35 @@
 module;
 
-#include <ranges>
+#include <initializer_list>
 #include <iterator>
 #include <iostream>
-#include <vector>
-#include <initializer_list>
+#include <ranges>
 #include <stdexcept>
+#include <vector>
 
 export module smallVector;
 export template <typename T, int N> class SmallVector;
 
-
+/**
+ * @brief A small fixed-size vector class template.
+ *
+ * This class template provides a container for storing a fixed number of
+ * elements of type T. It supports various operations like insertion, access,
+ * sorting, and more.
+ *
+ * @tparam T The type of elements to store in the SmallVector.
+ * @tparam N The maximum number of elements the SmallVector can hold.
+ */
 template <typename T, int N> class SmallVector
 {
 public:
-	/*** @Brief: Define iterator type alias */
+	/**
+	 * @brief Define iterator type aliases.
+	 */
 	using iterator = T*;
 	using const_iterator = const T*;
 
-	/*** @Brief: Define value_type alias, required by ranges. */
+	/*** @Brief: Define value_type alias, required by std::ranges. */
 	using value_type = T;
 
 	/*** @Brief: Class constructor */
@@ -92,15 +103,29 @@ public:
 	 * @param:index of the element.
 	 * @return: returs the element at index, if index is out of range 
 	 * the function throw a std::out_of_range exception. */
-	[[ nodiscard ]] T& operator[](size_t index)
+	[[ nodiscard ]] T& operator[](size_t index) 
 	{
 		if (index >= m_size)
 		{
 			throw std::out_of_range("Index out of range");
 		}
 		return m_data[index];
-		//return *static_cast<T*>(static_cast<void*>(&m_data[index * sizeof T]));
 	}
+
+	/*** @Brief: Implements array [] operator.
+ * @param:index of the element.
+ * @return: returs the element at index, if index is out of range
+ * the function throw a std::out_of_range exception. */
+	[[ nodiscard ]] const T& operator[](size_t index) const
+	{
+		if (index >= m_size)
+		{
+			throw std::out_of_range("Index out of range");
+		}
+		return m_data[index];
+	}
+
+
 
 	/*** @Brief: Returns the number of elements in the array.
 	* @param:none.
@@ -192,17 +217,18 @@ public:
 
 		// Sort the max heap
 		int unsorted_elements = static_cast<int>(arr.size() - 1);
+
 		while (unsorted_elements > 0) 
 		{
 			heapify_max_representation(arr, unsorted_elements);
 		}
 
-
-
 		// now we sort our array by sending the root (highest element) to the
 		//  end and heapifying the array afterwards
 		// heapify_max_representation(arr, arr.size() - 1);
 
+		// TODO: find a workaroung to not have to do this copy.
+		// 
 		// Copy the sorted elements back to the original array
 		for(int i = 0; i < arr.size(); i++)
 		{
@@ -269,13 +295,6 @@ public:
 					break;
 				}
 			}
-			
-			// Call the fuction for the next element until the array is sorted
-			//heapify_max_representation(arr, unsorted_elements);
-		}
-		else 
-		{
-			return;
 		}
 	}
 
@@ -307,6 +326,15 @@ public:
 			}
 		}
 		arr.push_back(value);
+	}
+
+	void stdout_dump(char delimiter = ' ') 
+	{
+		for(const auto & value : *this)
+		{
+			std::cout << value << delimiter;
+		}
+		std::cout << std::endl;
 	}
 
 
@@ -347,8 +375,6 @@ private:
 		auto dataAsT = asTArray();
 		// Split the array in two
 		// Calculate the lenght of the two arrays
-		//int len2 = right - len1 + 1;
-
 		int len1 = (right - left + 1) / 2; // Size of left subarray
 		int len2 = right - left + 1 - len1; // Size of right subarray
 		int mid = left + len1; // Midpoint index
@@ -364,7 +390,7 @@ private:
 
 		for (int i = 0; i < len2; ++i)
 		{
-			rightSubArray[i] = dataAsT[mid + 1 * 0 + i];
+			rightSubArray[i] = dataAsT[mid + i];
 		}
 
 		// Sort the sub Arrays 
@@ -407,7 +433,6 @@ private:
 	T* m_end{ nullptr };
 	T* m_begin{ nullptr };
 	size_t m_size{ 0 };
-	//char m_data[N * sizeof T]{ };
 	T m_data[N]{ };
 };
 

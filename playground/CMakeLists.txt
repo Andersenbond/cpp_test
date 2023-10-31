@@ -15,7 +15,7 @@ set (INCLUDE_PATH ${CMAKE_INCLUDE_PATH})
 
 set (ModSources
 	"module/small_vector_if.ixx"
-)
+	"module/search_algorithm.ixx")
 set (SOURCES 
 	"src/playground.cpp"  
 	"src/ranges_test.h" 
