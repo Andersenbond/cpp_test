@@ -1,15 +1,17 @@
-export module smallVector;
-
-export template <typename T, int N> class SmallVector;
+module;
 
 #include <ranges>
 #include <iterator>
 #include <iostream>
 #include <vector>
+#include <initializer_list>
+#include <stdexcept>
+
+export module smallVector;
+export template <typename T, int N> class SmallVector;
 
 
-template <typename T, int N>
-class SmallVector
+template <typename T, int N> class SmallVector
 {
 public:
 	/*** @Brief: Define iterator type alias */
@@ -22,8 +24,6 @@ public:
 	/*** @Brief: Class constructor */
 	SmallVector() : m_size{ 0 }
 	{
-		//m_begin = static_cast<T*>(static_cast<void*>(m_data));
-		//m_end = static_cast<T*>(static_cast<void*>(m_data));
 		m_begin = m_data;
 		m_end = m_data;
 	}
@@ -34,8 +34,6 @@ public:
 	* */
   	SmallVector(size_t size) : m_size{ size }
 	{
-		//m_begin = static_cast<T*>(static_cast<void*>(m_data));
-		//m_end = static_cast<T*>(static_cast<void*>(m_data));
 		m_begin = m_data;
 		m_end = m_begin + m_size;
 	}
@@ -45,8 +43,6 @@ public:
 	 * @return: none */
 	SmallVector(const SmallVector& other)
 	{
-		//m_begin = static_cast<T*>(static_cast<void*>(m_data));
-		//m_end = static_cast<T*>(static_cast<void*>(m_data));
 		m_begin = m_data;
 		m_end = m_begin + m_size;
 
@@ -54,32 +50,49 @@ public:
 		m_size = other.size();
 	}
 
+	/*** @Brief: Initializer List constructor
+	* @param: initializer list of T elements.
+	* @return: none */
+	SmallVector(std::initializer_list<T> list) : m_begin {m_data}, m_end{ m_data }
+	{
+		if (list.size() > N) { return; }
+
+ 		// Initialize the vector using the elements from the initializer list
+		int i = 0;
+		for (const auto& element : list) 
+		{
+			m_data[i++] = element;
+		}
+		m_end += list.size();
+		m_size = list.size(); 
+	}
+
 	/*** @Brief: Array begin iterator get function.
 	 * @param:none.
 	 * @return: returs array begin iterator. */
-	iterator begin() const noexcept { return m_begin; }
+	[[ nodiscard ]] iterator begin() const noexcept { return m_begin; }
 
 
 	/*** @Brief: Array end iterator get function.
 	 * @param:none.
 	 * @return: returs array end iterator. */
-	iterator end() const noexcept { return m_end; }
+	[[ nodiscard ]] iterator end() const noexcept { return m_end; }
 
 	/*** @Brief: Array end iterator get function.
 	 * @param:none.
 	 * @return: returs const reference to array begin iterator. */
-	const_iterator cbegin() const noexcept { return m_begin; }
+	[[ nodiscard ]] const_iterator cbegin() const noexcept { return m_begin; }
 	
 	/*** @Brief: Array end iterator get function.
 	 * @param:none.
 	 * @return: returs const reference to array end iterator. */
-	const_iterator cend() const noexcept { return m_begin; }
+	[[ nodiscard ]] const_iterator cend() const noexcept { return m_begin; }
 	
 	/*** @Brief: Implements array [] operator.
 	 * @param:index of the element.
 	 * @return: returs the element at index, if index is out of range 
 	 * the function throw a std::out_of_range exception. */
-	T& operator[](size_t index)
+	[[ nodiscard ]] T& operator[](size_t index)
 	{
 		if (index >= m_size)
 		{
@@ -178,7 +191,7 @@ public:
 		}
 
 		// Sort the max heap
-		int unsorted_elements = arr.size() - 1;
+		int unsorted_elements = static_cast<int>(arr.size() - 1);
 		while (unsorted_elements > 0) 
 		{
 			heapify_max_representation(arr, unsorted_elements);
@@ -202,8 +215,8 @@ public:
 	{
 		// Get the parent of the node to be inserted
 
-		int value_index = arr.size();
-		int parent_index = (value_index - 1) / 2;
+		std::size_t value_index = arr.size();
+		std::size_t parent_index = (value_index - 1) / 2;
 		// insert the node
 		arr.push_back(value);
 

@@ -4,17 +4,7 @@ import smallVector;
 
 int main()
 {
-	SmallVector<int, 10> sort;
-	sort.push_back(11);
-	sort.push_back(30);
-	sort.push_back(1);
-	sort.push_back(20);
-	sort.push_back(15);
-	sort.push_back(5);
-	sort.push_back(19);
-	sort.push_back(88);
-	sort.push_back(99);
-	sort.push_back(12);
+	SmallVector<int, 10> sort = {11, 30, 1, 20, 15, 5, 19, 88, 99, 12};
 
 
 
